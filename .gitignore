@@ -1,0 +1,14 @@
+# Go build artifacts
+*.exe
+*.test
+*.out
+coverage/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Vue/Vite dependencies and build output
+web/node_modules/
+web/dist/

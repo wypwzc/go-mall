@@ -1,82 +1,108 @@
-基于 **go-zero + Vue 3** 的微服务单体仓库（Monorepo）设计，推荐的标准项目目录结构如下：
+基于 **go-zero + Vue 3** 的电商项目 Monorepo。Monorepo 描述代码仓库的组织方式；微服务描述服务的拆分和部署方式，两者不是同一概念。
 
+## 当前仓库结构
 
+目前已具备根 Go module、go-zero 网关 HTTP 启动入口（含 `/health` 探活路由）以及 Vue 3 + Vite 前端入口；用户、商品、库存、订单等业务 RPC 和商城页面仍待实现。空目录不会被 Git 跟踪；下方目录树表示职责规划，不代表每个服务都已完成。
 
-```
-go-mall/                           # 项目根目录
-├── apps/                          # 所有后端微服务目录
-│   ├── gateway/                   # 【API 网关】对外暴露 HTTP 接口，做鉴权与路由
+```text
+go-mall/
+├── apps/
+│   ├── gateway/                  # HTTP API 网关目录
 │   │   ├── etc/
-│   │   │   └── gateway.yaml       # 网关配置文件
-│   │   ├── internal/
-│   │   │   ├── config/            # 配置映射结构体
-│   │   │   ├── handler/           # HTTP 路由 handler (goctl 自动生成)
-│   │   │   ├── logic/             # 网关业务逻辑 (负责发起 RPC 调用)
-│   │   │   ├── middleware/        # JWT 鉴权、跨域等中间件
-│   │   │   ├── svc/               # 依赖上下文 (注入各 RPC 客户端)
-│   │   │   └── types/             # 请求/响应结构体 (goctl 自动生成)
-│   │   ├── gateway.api            # API 协议定义文件
-│   │   ├── gateway.go             # 网关服务启动入口
-│   │   └── Dockerfile             # 网关构建文件
-│   │
-│   ├── user/                      # 【用户 RPC 服务】
+│   │   │   └── gateway.yaml
+│   │   └── internal/
+│   │       ├── config/
+│   │       ├── handler/
+│   │       ├── logic/
+│   │       ├── middleware/
+│   │       ├── svc/
+│   │       └── types/
+│   │   ├── gateway.api
+│   │   └── gateway.go
+│   ├── user/                     # 用户 RPC 服务目录
 │   │   ├── etc/
-│   │   │   └── user.yaml          # 用户服务配置 (MySQL/Redis 连接)
 │   │   ├── internal/
 │   │   │   ├── config/
-│   │   │   ├── logic/             # 登录/注册等核心业务代码
-│   │   │   ├── model/             # 数据库 CRUD 操作 (goctl 从 SQL 生成)
-│   │   │   ├── server/            # gRPC 接口实现
-│   │   │   └── svc/               # 上下文资源管理
-│   │   ├── pb/                    # Protobuf 编译生成的 Go 代码
-│   │   ├── user.proto             # gRPC 协议文件
-│   │   ├── user.go                # RPC 服务启动入口
-│   │   └── Dockerfile
-│   │
-│   ├── product/                   # 【商品 RPC 服务】(目录结构同 user)
-│   ├── stock/                     # 【库存 RPC 服务】(目录结构同 user)
-│   └── order/                     # 【订单 RPC 服务】(目录结构同 user)
-│
-├── common/                        # 后端通用公共组件
-│   ├── errorx/                    # 统一错误码与自定义 error
-│   ├── tool/                      # 加密/JWT/格式化工具函数
-│   └── xcode/                     # 业务状态码定义
-│
-├── web/                           # 【Vue 3 前端项目】
+│   │   │   ├── logic/
+│   │   │   ├── model/
+│   │   │   ├── server/
+│   │   │   └── svc/
+│   │   └── pb/
+│   ├── product/                  # 商品 RPC 服务目录
+│   ├── stock/                    # 库存 RPC 服务目录
+│   └── order/                    # 订单 RPC 服务目录
+├── common/                       # 经多个服务确认复用的公共组件
+│   ├── errorx/
+│   ├── tool/
+│   └── xcode/
+├── web/                          # Vue 3 前端
 │   ├── src/
-│   │   ├── api/                   # 接口请求模块 (按微服务划分子文件)
-│   │   ├── assets/                # 静态资源 (图片、样式)
-│   │   ├── components/            # 通用 UI 组件
-│   │   ├── router/                # 页面路由
-│   │   ├── store/                 # Pinia 状态管理 (Token、用户信息)
-│   │   └── views/                 # 页面组件 (Login, Products, OrderList)
-│   ├── nginx.conf                 # 前端容器使用的 Nginx 代理配置
+│       ├── api/
+│       ├── assets/
+│       ├── components/
+│       ├── router/
+│       ├── store/
+│       └── views/
+│   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js             # Vite 配置文件 (配置开发阶段 proxy 跨域)
-│   └── Dockerfile                 # 前端多阶段镜像构建文件
-│
-├── deploy/                        # 部署与运维资源
-│   ├── docker-compose/            # 本地/测试环境依赖拉起 (MySQL, Redis)
-│   │   └── docker-compose.yaml
-│   └── sql/                       # 数据库初始化脚本
-│       ├── user.sql
-│       ├── product.sql
-│       ├── stock.sql
-│       └── order.sql
-│
-├── go.mod                         # 全局 Go 模块管理文件
+│   ├── package-lock.json
+│   └── vite.config.js
+├── deploy/                       # 本地依赖、数据库和部署配置
+│   ├── docker-compose/
+│   └── sql/
+├── go.mod
 ├── go.sum
-└── Jenkinsfile                    # CI/CD 自动化构建脚本
+└── .gitignore
 ```
 
-### 关键目录与文件设计说明：
+`go test ./apps/gateway` 与 `web/` 下的 `npm run build` 已通过。用户 RPC 的 `user.go`、`user.proto` 及其他业务服务仍是空骨架，尚不能认为 RPC 服务和完整商城已经实现。
 
-1. **`apps/` 目录（微服务隔离）**
-   - **`gateway`** 是唯一的 HTTP 入口，负责处理跨域、JWT Token 校验，并通过 gRPC 协议将请求转发给内部微服务。
-   - **`user` / `product` / `stock` / `order`** 是独立的纯 gRPC 服务，不暴露 HTTP 端口，彼此通过 Protobuf 通信，高内聚低耦合。
-2. **`internal/model/`（数据库层）**
-   - 不要手动写 SQL，在各服务目录下使用命令 `goctl model mysql ddl -src deploy/sql/user.sql -dir internal/model -c`，由 go-zero 自动生成高性能且带防缓存击穿的 CRUD 操作代码。
-3. **`web/`（前端与后端彻底解耦）**
-   - Vue 3 代码完全独立，打包后通过根目录下的 `nginx.conf` 运行在独立的容器中。
-4. **`Jenkinsfile`（流水线枢纽）**
-   - 脚本可以监听 GitLab 提交。当检测到 `apps/user/` 下的代码有变化时，只构建并升级 `user` 容器；当检测到 `web/` 有修改时，只执行前端打包，大幅提升 CI/CD 执行效率。
+## 目录约定
+
+- `apps/gateway` 面向外部提供 HTTP API，负责协议转换、参数校验和调用内部 RPC。鉴权等横切能力可通过中间件实现；不要把商品、订单等领域业务都堆进网关。
+- `apps/user`、`apps/product`、`apps/stock`、`apps/order` 按领域拆分为 RPC 服务。每个服务维护自己的 API/Proto、配置、启动入口、`internal/` 实现和数据访问；服务之间通过 RPC 通信，避免直接访问其他服务的数据库。
+- `internal/` 用于服务私有实现。`model/` 可放数据库访问代码，`server/` 实现 RPC 接口，`logic/` 放用例逻辑，`svc/` 管理依赖。
+- `pb/` 等生成目录应由固定版本的 `protoc`/`goctl` 生成。明确生成文件的来源，不要手动修改生成代码。
+- `common/` 只放确实被多个服务复用、且不属于某个业务服务的代码；避免逐渐变成所有业务逻辑的公共大杂烩。
+- `web/` 独立管理 Vue 依赖与构建，当前使用 Vue 3、Vue Router、Pinia 和 Vite，入口为 `src/main.js`，开发服务器将 `/api` 代理到 `http://localhost:8888`。常用命令：`npm ci` 安装锁定依赖，`npm run dev` 启动开发服务器，`npm run build` 构建生产文件。Pinia 目录名 `store/` 或 `stores/` 均可，保持一致即可。
+- Nginx 配置、Compose 文件和数据库脚本统一由 `deploy/` 管理，避免 README 中同时出现根目录和 `web/` 两种 Nginx 配置位置。数据库结构持续演进后，优先采用有版本号的迁移脚本，而不只依赖首次初始化 SQL。
+
+## 本地启动
+
+在一个终端中从仓库根目录启动网关：
+
+```bash
+cd apps/gateway
+go run . -f etc/gateway.yaml
+```
+
+网关启动后可访问 `http://localhost:8888/health`。另开一个终端启动前端：
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+Vite 默认地址为 `http://localhost:5173`；开发代理会把 `/api/...` 转发到网关并去掉 `/api` 前缀。
+
+## Go 模块与代码生成
+
+当前使用仓库根目录的单个 `go.mod` 管理服务和共享包，模块路径为 `github.com/wypwzc/go-mall`，Go 版本声明为 `1.26.3`，go-zero 版本为 `v1.10.3`。只有在服务需要独立版本发布或独立依赖管理时，再考虑拆分 Go module。当前验证环境为 `windows/386`（32 位）；网关包在该环境编译通过，建议 CI 和部署优先使用 `amd64`，并在目标架构重新运行测试。
+
+前端验证环境为 Node.js `22.21.1`、npm `10.9.4`。依赖版本记录在 `web/package-lock.json` 中，团队安装依赖时使用 `npm ci` 保持一致。
+
+以用户服务为例，从仓库根目录生成模型代码：
+
+```bash
+goctl model mysql ddl -src deploy/sql/user.sql -dir apps/user/internal/model -c
+```
+
+生成代码能减少重复 CRUD 实现；缓存及其一致性、击穿保护行为取决于 go-zero 版本、生成选项和实际运行配置，不应仅凭生成命令作保证。请将 `goctl` 与项目使用的 go-zero 版本保持兼容，并检查生成结果。
+
+## 待完成
+
+1. 定义用户、商品、库存、订单服务的 Proto 契约，生成 RPC 代码并实现配置、启动入口和业务逻辑。
+2. 按业务需求补齐 Vue 页面和网关 API，再为核心流程增加服务级与集成测试。
+3. 编写 Compose 和数据库初始化/迁移文件，并通过环境变量或未提交的本地配置注入凭据，不要把真实密钥提交到仓库。
+4. Jenkinsfile 或其他 CI 工作流按实际部署平台选择，不是 Monorepo 必须包含的文件。
