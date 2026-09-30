@@ -100,7 +100,7 @@ goctl model mysql ddl -src deploy/sql/user.sql -dir apps/user/internal/model -c
 
 生成代码能减少重复 CRUD 实现；缓存及其一致性、击穿保护行为取决于 go-zero 版本、生成选项和实际运行配置，不应仅凭生成命令作保证。请将 `goctl` 与项目使用的 go-zero 版本保持兼容，并检查生成结果。
 
-## 待完成
+## 待完成!
 
 1. 定义用户、商品、库存、订单服务的 Proto 契约，生成 RPC 代码并实现配置、启动入口和业务逻辑。
 2. 按业务需求补齐 Vue 页面和网关 API，再为核心流程增加服务级与集成测试。
